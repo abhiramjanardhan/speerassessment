@@ -1,0 +1,1 @@
+org.springframework.test.context.TestExecutionListener=com.assessment.speernotes.setup.TestSetup
