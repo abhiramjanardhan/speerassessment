@@ -48,7 +48,7 @@ To ensure fair usage and prevent abuse, the **SpeerNotes** API implements **rate
 
 ### Prerequisites
 Ensure that you have the following installed on your local machine:
-- **Java 17** (or higher)
+- **Java 21**
 - **Maven** (for building the project)
 - **MongoDB Atlas** account (for the database)
 - **Git** (for version control)
