@@ -3,4 +3,4 @@ target/
 *.md
 *.iml
 *.log
-*.env
+.env
