@@ -1,4 +1,4 @@
-# PeerNotes Application
+# SpeerNotes Application
 
 The **PeerNotes** application allows users to create, update, delete, and share notes. It is built using **Spring Boot**, and utilizes **MongoDB** for data persistence. The application follows RESTful API principles and integrates various third-party tools to handle authentication, data conversion, and other utilities.
 
