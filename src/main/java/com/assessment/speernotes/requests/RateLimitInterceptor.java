@@ -23,6 +23,15 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     @Value("${rate-limiting.enabled:true}")  // Default to true if the property is not found
     boolean rateLimitingEnabled;
 
+    /**
+     * This method is used to limit the requests
+     *
+     * @param request
+     * @param response
+     * @param handler
+     * @return boolean
+     * @throws Exception
+     */
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         if (!rateLimitingEnabled) {
