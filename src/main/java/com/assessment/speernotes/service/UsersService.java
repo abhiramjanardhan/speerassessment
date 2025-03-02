@@ -127,7 +127,7 @@ public class UsersService {
     }
 
     /**
-     * Add a method to delete all users after each test run
+     * This method is used to delete the created user if present
      *
      * @param email
      */
