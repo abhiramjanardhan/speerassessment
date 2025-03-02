@@ -2,98 +2,93 @@ package com.assessment.speernotes.controller;
 
 import com.assessment.speernotes.model.dto.UserAuthDto;
 import com.assessment.speernotes.service.UsersService;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ActiveProfiles;
 
-@ExtendWith(MockitoExtension.class)
-public class AuthenticationControllerUnitTest {
+import java.util.Objects;
 
-    @Mock
+import static org.junit.jupiter.api.Assertions.*;
+
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
+public class AuthenticationControllerTest {
+    @Autowired
+    private TestRestTemplate restTemplate;
+
+    @Autowired
     private UsersService usersService;
 
-    @InjectMocks
-    private AuthenticationController authenticationController;
-
-    private MockMvc mockMvc;
-
-    @BeforeEach
-    public void setup() {
-        mockMvc = MockMvcBuilders.standaloneSetup(authenticationController).build();
+    @AfterEach
+    public void cleanUp() {
+        // Clean up after each test to ensure no test data persists
+        usersService.deleteUserByEmail("test@example.com");
+        usersService.deleteUserByEmail("newuser@example.com");
+        usersService.deleteUserByEmail("wrong@example.com");
+        usersService.deleteUserByEmail("valid@example.com");
     }
 
     @Test
-    public void testSignup_UserAlreadyExists() throws Exception {
-        // Arrange
-        UserAuthDto user = new UserAuthDto("test", "test@example.com", "password");
-        when(usersService.isUserPresent(user.getEmail())).thenReturn(true);
+    void testSignup_UserAlreadyExists() {
+        // Given
+        UserAuthDto userAuthDto = new UserAuthDto("testuser", "test@example.com", "password123");
+        usersService.createUser(userAuthDto); // create user in the test DB
 
-        // Act & Assert
-        mockMvc.perform(post("/api/auth/signup")
-                        .contentType("application/json")
-                        .content("{\"username\":\"test\", \"email\":\"test@example.com\", \"password\":\"password\"}"))
-                .andExpect(status().isOk())
-                .andExpect(content().string("User already exists!"));
+        // When
+        HttpEntity<UserAuthDto> requestEntity = new HttpEntity<>(userAuthDto);
+        ResponseEntity<String> response = restTemplate.exchange("/api/auth/signup", HttpMethod.POST, requestEntity, String.class);
 
-        verify(usersService, times(1)).isUserPresent(user.getEmail());
-        verify(usersService, never()).createUser(any());
+        // Then
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals("User already exists!", response.getBody());
     }
 
     @Test
-    public void testSignup_SuccessfulRegistration() throws Exception {
-        // Arrange
-        UserAuthDto user = new UserAuthDto("test", "test@example.com", "password");
-        when(usersService.isUserPresent(user.getEmail())).thenReturn(false);
+    void testSignup_UserCreatedSuccessfully() {
+        // Given
+        UserAuthDto userAuthDto = new UserAuthDto("newuser", "newuser@example.com", "password123");
 
-        // Act & Assert
-        mockMvc.perform(post("/api/auth/signup")
-                        .contentType("application/json")
-                        .content("{\"username\":\"test\", \"email\":\"test@example.com\", \"password\":\"password\"}"))
-                .andExpect(status().isOk())
-                .andExpect(content().string("User registered successfully!"));
+        // When
+        HttpEntity<UserAuthDto> requestEntity = new HttpEntity<>(userAuthDto);
+        ResponseEntity<String> response = restTemplate.exchange("/api/auth/signup", HttpMethod.POST, requestEntity, String.class);
 
-        verify(usersService, times(1)).isUserPresent(user.getEmail());
-        verify(usersService, times(1)).createUser(user);
+        // Then
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals("User registered successfully!", response.getBody());
     }
 
     @Test
-    public void testLogin_InvalidCredentials() throws Exception {
-        // Arrange
-        UserAuthDto user = new UserAuthDto("test", "test@example.com", "wrongPassword");
-        when(usersService.getUserJWT(user)).thenReturn("");
+    void testLogin_InvalidCredentials() {
+        // Given
+        UserAuthDto userAuthDto = new UserAuthDto("wronguser", "wrong@example.com", "wrongpassword");
 
-        // Act & Assert
-        mockMvc.perform(post("/api/auth/login")
-                        .contentType("application/json")
-                        .content("{\"username\":\"test\", \"email\":\"test@example.com\", \"password\":\"wrongPassword\"}"))
-                .andExpect(status().isOk())
-                .andExpect(content().string("Invalid credentials"));
+        // When
+        HttpEntity<UserAuthDto> requestEntity = new HttpEntity<>(userAuthDto);
+        ResponseEntity<String> response = restTemplate.exchange("/api/auth/login", HttpMethod.POST, requestEntity, String.class);
 
-        verify(usersService, times(1)).getUserJWT(user);
+        // Then
+        assertEquals(400, response.getStatusCodeValue());
+        assertTrue(Objects.requireNonNull(response.getBody()).contains("Invalid user for the email wrong@example.com. Please try again!"));
     }
 
     @Test
-    public void testLogin_SuccessfulLogin() throws Exception {
-        // Arrange
-        UserAuthDto user = new UserAuthDto("test", "test@example.com", "password");
-        String jwtToken = "some-jwt-token";
-        when(usersService.getUserJWT(user)).thenReturn(jwtToken);
+    void testLogin_ValidCredentials() {
+        // Given
+        UserAuthDto userAuthDto = new UserAuthDto("validuser", "valid@example.com", "password123");
+        usersService.createUser(userAuthDto); // Create user for testing login
 
-        // Act & Assert
-        mockMvc.perform(post("/api/auth/login")
-                        .contentType("application/json")
-                        .content("{\"email\":\"test@example.com\", \"password\":\"password\"}"))
-                .andExpect(status().isOk())
-                .andExpect(content().string(jwtToken));
+        // When
+        HttpEntity<UserAuthDto> requestEntity = new HttpEntity<>(userAuthDto);
+        ResponseEntity<String> response = restTemplate.exchange("/api/auth/login", HttpMethod.POST, requestEntity, String.class);
 
-        verify(usersService, times(1)).getUserJWT(user);
+        // Then
+        assertEquals(200, response.getStatusCodeValue());
+        assertNotNull(response.getBody());
     }
 }

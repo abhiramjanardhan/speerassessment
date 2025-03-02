@@ -1,5 +1,6 @@
-package com.assessment.speernotes.utils;
+package com.assessment.speernotes.requests;
 
+import com.assessment.speernotes.utils.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

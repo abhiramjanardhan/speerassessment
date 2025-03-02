@@ -1,4 +1,7 @@
 package com.assessment.speernotes.exceptions;
 
-public class AuthencationException {
+public class AuthenticationException extends RuntimeException {
+    public AuthenticationException() {
+        super("Authentication Failure! Please try again!");
+    }
 }
