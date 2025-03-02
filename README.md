@@ -50,7 +50,8 @@ To ensure fair usage and prevent abuse, the **SpeerNotes** API implements **rate
 Ensure that you have the following installed on your local machine:
 - **Java 17** (or higher)
 - **Maven** (for building the project)
-- **MongoDB** or **PostgreSQL** (depending on the database you want to use)
+- **MongoDB Atlas** account (for the database)
+- **Git** (for version control)
 
 ### Clone the Repository
 ```bash
@@ -67,6 +68,28 @@ cd speernotes
 ```properties
 rate-limiting.enabled=true
 ```
+### Setting Up Environment Variables
+
+To run the application, you need to configure environment variables required for the application to function properly. Create a .env file in the root directory of your project and add the following values (replace them with your actual credentials where applicable):
+
+```agsl
+# MongoDB URI
+SPRING_DATA_MONGODB_URI=mongodb+srv://<username>:<password>@<cluster-url>/speer_notes?retryWrites=true&w=majority
+
+# Server Port (default: 9090)
+SERVER_PORT=9090
+
+# Rate Limiting (Set to true/false depending on your preference)
+RATE_LIMITING_ENABLED=true
+
+# JWT Secret Key for Authentication
+JWT_SECRET_KEY=your-jwt-secret-key
+```
+
+- SPRING_DATA_MONGODB_URI: Provide the MongoDB URI that connects to your MongoDB Atlas instance. You can find this in your MongoDB Atlas dashboard.
+- SERVER_PORT: Set the port on which the application will run locally (default is 9090).
+- RATE_LIMITING_ENABLED: Configure whether rate limiting should be enabled (true or false).
+- JWT_SECRET_KEY: Provide a secret key to sign and verify JWT tokens for authentication. This key should be kept private.
 
 ### Execution
 
@@ -90,6 +113,15 @@ http://localhost:9090/swagger-ui/index.html
 ```agsl
 mvn test
 ```
+
+### Deployment
+
+- The project is deployed in Render and is currently available for use in the below link:
+```agsl
+https://speerassessment.onrender.com/swagger-ui/index.html
+```
+- The Notes End Points takes in a JWT token generated through user login and this can be configured through Swagger page's **Authorize** option
+- Mongo DB Atlas is chosen as it can be directly mapped with the project and no extra effort is required other than placing the right URI in the env file
 
 ### Project Structure
 
